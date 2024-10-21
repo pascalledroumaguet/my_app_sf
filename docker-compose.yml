@@ -1,0 +1,45 @@
+version: '3'
+
+networks:
+    dev: ~
+
+services:
+  php:
+    #image: dunglas/frankenphp
+    build: docker/frankenphp
+    restart: always
+    environment: 
+      SERVER_NAME: my-app-sf.localhost
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - .:/app:cached
+      - caddy_data:/data
+      - caddy_config:/config
+      
+  mongo:
+      image: mongo:4.4.18
+      volumes:
+          - mongo_data:/data/db
+      env_file:
+          - ./.env
+      ports:
+          - 27017:27017
+      restart: unless-stopped
+
+  mongo-express:
+      image: mongo-express:latest
+      ports:
+          - 8081:8081
+      depends_on:
+          - mongo
+      env_file:
+          - ./.env
+
+# Volumes needed for Caddy certificates and configuration
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:
